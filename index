@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Итоговый квиз: Инженер КИПиА</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f8ff; /* Alice Blue background */
+            color: #0c4a6e;
+        }
+        .quiz-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+        .quiz-header h1 {
+            color: #0369a1;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0f2fe;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            height: 12px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+            border-radius: 8px;
+            transition: width 0.4s ease-in-out;
+        }
+        .question-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #075985;
+        }
+        .answers-container label {
+            display: block;
+            background-color: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .answers-container label.selected {
+            border-color: #38bdf8;
+            background-color: #e0f2fe;
+        }
+        .answers-container label:hover {
+            border-color: #7dd3fc;
+        }
+        .answers-container input[type="radio"] {
+            display: none;
+        }
+        .feedback {
+            margin-top: 1.25rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            border-left-width: 4px;
+        }
+        .feedback.correct {
+            background-color: #f0fdf4;
+            color: #15803d;
+            border-color: #4ade80;
+        }
+        .feedback.incorrect {
+            background-color: #fef2f2;
+            color: #b91c1c;
+            border-color: #f87171;
+        }
+        .nav-button {
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25);
+        }
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(56, 189, 248, 0.35);
+        }
+        .nav-button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .score-container h2 {
+            font-size: 2rem;
+            color: #0369a1;
+        }
+        .score-container p {
+            font-size: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div id="quizHeader">
+            <h1 class="text-3xl font-bold text-center mb-4">Итоговый квиз по курсу "Инженер КИПиА"</h1>
+            <div class="progress-bar-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+            <p id="questionCounter" class="text-sm text-right text-gray-600 mb-6"></p>
+        </div>
+
+        <div id="questionArea">
+            <h2 id="questionTitle" class="question-title"></h2>
+            <div id="answersContainer" class="answers-container"></div>
+            <div id="feedbackArea" class="feedback hidden"></div>
+        </div>
+
+        <div id="resultsArea" class="score-container hidden">
+            <h2>Результаты</h2>
+            <p id="score" class="my-4"></p>
+            <p id="summaryText" class="font-medium"></p>
+            <button id="restartButton" class="nav-button">Пройти еще раз</button>
+        </div>
+        
+        <button id="nextButton" class="nav-button float-right">Ответить</button>
+    </div>
+
+    <script>
+        const quizData = [
+            // Модуль 1
+            { question: "Какой проект считается 'Greenfield'?", answers: [ { text: "Модификация существующего завода", correct: false }, { text: "Строительство нового объекта 'с нуля'", correct: true }, { text: "Проект по замене устаревшего оборудования", correct: false }, { text: "Проект по оптимизации программного обеспечения", correct: false } ], explanation: "Greenfield — это проект, который реализуется на новом, неосвоенном участке, то есть 'в чистом поле'." },
+            { question: "Что является основной целью этапа FEED (Front-End Engineering Design)?", answers: [ { text: "Физическое строительство объекта", correct: false }, { text: "Подробное проектирование и подготовка к фазе реализации", correct: true }, { text: "Ввод объекта в эксплуатацию", correct: false }, { text: "Оценка экономической целесообразности", correct: false } ], explanation: "FEED — это этап детального проектирования, на котором прорабатываются технические решения и готовится документация для закупки и строительства." },
+            { question: "Какой документ является основой для оценки затрат, времени и ресурсов проекта?", answers: [ { text: "P&ID", correct: false }, { text: "Scope of Work (SOW)", correct: false }, { text: "Cost-Time-Resource (CTR)", correct: true }, { text: "Loop Diagram", correct: false } ], explanation: "CTR (Cost-Time-Resource) — это документ для детальной оценки человеко-часов, бюджета и сроков по каждому проектному документу." },
+            { question: "Какая из перечисленных обязанностей инженера КИПиА относится к обеспечению промышленной безопасности?", answers: [ { text: "Разработка графики для HMI", correct: false }, { text: "Контроль и координация работ EPC-подрядчиков", correct: false }, { text: "Участие в анализе рисков (HAZOP) и определении уровня SIL", correct: true }, { text: "Подготовка инструкций по эксплуатации", correct: false } ], explanation: "Участие в HAZOP и SIL — это ключевая задача инженера КИПиА для обеспечения безопасности технологического процесса." },
+            { question: "Кто в команде проекта отвечает за разработку и оформление чертежей по заданию инженера?", answers: [ { text: "Project Engineer", correct: false }, { text: "CAD Designer", correct: true }, { text: "Maintenance Instrument Engineer", correct: false }, { text: "Network Engineer", correct: false } ], explanation: "CAD Designer (Проектировщик САПР) занимается разработкой и оформлением чертежей (P&ID, схем и т.д.)." },
+            // Модуль 2
+            { question: "Какой тип измерения давления отсчитывается от идеального вакуума?", answers: [ { text: "Избыточное давление", correct: false }, { text: "Дифференциальное давление", correct: false }, { text: "Абсолютное давление", correct: true }, { text: "Барометрическое давление", correct: false } ], explanation: "Абсолютное давление измеряется относительно полного вакуума, в то время как избыточное — относительно атмосферного." },
+            { question: "Для чего используется термокарман (Thermowell)?", answers: [ { text: "Для измерения скорости потока", correct: false }, { text: "Для защиты датчика температуры от технологической среды", correct: true }, { text: "Для регулирования давления", correct: false }, { text: "Для фильтрации жидкости", correct: false } ], explanation: "Термокарман изолирует чувствительный элемент датчика температуры от давления и агрессивного воздействия среды, позволяя его замену без остановки процесса." },
+            { question: "Какой уровнемер лучше всего подходит для измерения границы раздела двух жидкостей, например, 'нефть/вода'?", answers: [ { text: "Бесконтактный радар", correct: false }, { text: "Ультразвуковой уровнемер", correct: false }, { text: "Радар с направляемой волной (GWR)", correct: true }, { text: "Гидростатический уровнемер", correct: false } ], explanation: "GWR отлично подходит для измерения уровня границы раздела сред, так как часть сигнала отражается от верхней жидкости, а часть — от нижней." },
+            { question: "Какой расходомер измеряет напрямую массу, а также плотность и температуру?", answers: [ { text: "Вихревой", correct: false }, { text: "Электромагнитный", correct: false }, { text: "Ультразвуковой", correct: false }, { text: "Кориолисовый", correct: true } ], explanation: "Кориолисов расходомер основан на измерении силы Кориолиса, что позволяет напрямую определять массовый расход." },
+            { question: "Какая характеристика регулирующего клапана обеспечивает лучший контроль на малых расходах и подходит для процессов с большими изменениями перепада давления?", answers: [ { text: "Линейная", correct: false }, { text: "Быстрое открытие", correct: false }, { text: "Равнопроцентная", correct: true }, { text: "Параболическая", correct: false } ], explanation: "Равнопроцентная характеристика дает больший прирост расхода при большем открытии, что обеспечивает точное регулирование во всем диапазоне." },
+            { question: "Что означает маркировка взрывозащиты 'Ex d'?", answers: [ { text: "Искробезопасная цепь", correct: false }, { text: "Повышенная безопасность", correct: false }, { text: "Взрывонепроницаемая оболочка", correct: true }, { text: "Герметизация компаундом", correct: false } ], explanation: "'Ex d' означает, что оболочка прибора способна выдержать внутренний взрыв без передачи его во внешнюю среду." },
+            { question: "Какой датчик пламени наиболее устойчив к ложным срабатываниям от солнца или сварки?", answers: [ { text: "Ультрафиолетовый (UV)", correct: false }, { text: "Инфракрасный (IR)", correct: false }, { text: "Трехдиапазонный ИК (Triple-IR)", correct: true }, { text: "Тепловой извещатель", correct: false } ], explanation: "Triple-IR датчики анализируют несколько спектров ИК-излучения и динамику 'пульсации' пламени, что делает их очень устойчивыми к ложным тревогам." },
+            { question: "Для обнаружения какого газа чаще всего используются электрохимические датчики?", answers: [ { text: "Метан (% LEL)", correct: false }, { text: "Сероводород (H₂S, ppm)", correct: true }, { text: "Пропан (% LEL)", correct: false }, { text: "Азот (% Vol)", correct: false } ], explanation: "Электрохимические сенсоры высокочувствительны к токсичным газам, таким как H₂S и CO, и измеряют их концентрацию в ppm (частей на миллион)." },
+            { question: "Что означает FAIL-позиция клапана FC (Fail Close)?", answers: [ { text: "Клапан остается в последнем положении при потере питания/сигнала", correct: false }, { text: "Клапан открывается при потере питания/сигнала", correct: false }, { text: "Клапан закрывается при потере питания/сигнала", correct: true }, { text: "Клапан начинает вибрировать", correct: false } ], explanation: "FC (Fail Close) означает, что клапан спроектирован так, чтобы закрыться и перекрыть поток в случае сбоя для обеспечения безопасности." },
+            { question: "В какой зоне, согласно классификации IEC 60079, взрывоопасная газовая смесь присутствует постоянно или в течение длительных периодов времени?", answers: [ { text: "Зона 2", correct: false }, { text: "Зона 1", correct: false }, { text: "Зона 0", correct: true }, { text: "Зона 20", correct: false } ], explanation: "Зона 0 — это область, где взрывоопасная газовая атмосфера присутствует постоянно или в течение длительных периодов (>1000 ч/год)." },
+            // Модуль 3
+            { question: "Какая система в структуре PAS (Process Automation System) отвечает за противоаварийную защиту и остановку процесса?", answers: [ { text: "PCS (Process Control System)", correct: false }, { text: "SIS (Safety Instrumented System)", correct: true }, { text: "FGS (Fire and Gas System)", correct: false }, { text: "DCS (Distributed Control System)", correct: false } ], explanation: "SIS предназначена для безопасной остановки процесса при возникновении опасных ситуаций, предотвращая аварии." },
+            { question: "Что означает логика голосования '2oo3' (Two-out-of-Three) в системе SIS?", answers: [ { text: "Система сработает, если хотя бы 1 из 3 датчиков покажет аварию", correct: false }, { text: "Система сработает, если все 3 датчика покажут аварию", correct: false }, { text: "Система сработает, если 2 из 3 датчиков покажут аварию", correct: true }, { text: "Система использует 2 датчика из 3 для управления", correct: false } ], explanation: "Логика 2oo3 повышает надежность, требуя подтверждения от двух датчиков из трех, что снижает риск ложных срабатываний." },
+            { question: "Какой уровень модели Purdue отвечает за управление производственными операциями (Manufacturing Ops)?", answers: [ { text: "Level 1", correct: false }, { text: "Level 2", correct: false }, { text: "Level 3", correct: true }, { text: "Level 4", correct: false } ], explanation: "Level 3 включает серверы управления производством, серверы приложений, historian и т.д." },
+            { question: "Для чего используется DMZ (демилитаризованная зона) в архитектуре Purdue?", answers: [ { text: "Для прямого управления полевыми приборами", correct: false }, { text: "Как буферная зона для безопасного обмена данными между корпоративной (IT) и технологической (OT) сетями", correct: true }, { text: "Для хранения резервных копий контроллеров", correct: false }, { text: "Для физического размещения операторских станций", correct: false } ], explanation: "DMZ (Level 3.5) служит безопасным шлюзом, контролируя и фильтруя весь трафик между IT и OT сетями." },
+            { question: "Что такое SIF в контексте SIS?", answers: [ { text: "Safety Integration Function (Функция интеграции безопасности)", correct: false }, { text: "Safety Instrumented Function (Приборная функция безопасности)", correct:true }, { text: "System Interface Frame (Системный интерфейсный фрейм)", correct: false }, { text: "Standard Instrumentation Form (Стандартная форма КИП)", correct: false } ], explanation: "SIF (Приборная функция безопасности) — это полный контур безопасности от датчика через логический решатель до исполнительного элемента." },
+            { question: "Какова основная функция FGS (Fire & Gas System)?", answers: [ { text: "Напрямую останавливать технологический процесс при утечке", correct: false }, { text: "Раннее обнаружение утечек газа и возгораний и активация систем оповещения и пожаротушения", correct: true }, { text: "Регулировать давление в трубопроводах", correct: false }, { text: "Оптимизировать работу компрессоров", correct: false } ], explanation: "FGS обнаруживает опасность и передает сигнал в SIS/ESD для останова, а также активирует местные системы оповещения и пожаротушения." },
+            { question: "Что такое SIL (Safety Integrity Level)?", answers: [ { text: "Уровень интеграции программного обеспечения", correct: false }, { text: "Уровень полноты безопасности, определяющий надежность функции безопасности", correct: true }, { text: "Стандартная процедура калибровки", correct: false }, { text: "Протокол сетевой коммуникации", correct: false } ], explanation: "SIL определяет требуемую степень снижения риска для приборной функции безопасности (SIF) и связан с вероятностью ее отказа." },
+            { question: "Какой протокол обеспечивает высокоточную (до миллисекунд) синхронизацию времени между контроллерами?", answers: [ { text: "NTP (Network Time Protocol)", correct: false }, { text: "PTP (Precision Time Protocol, IEEE 1588)", correct: true }, { text: "HART", correct: false }, { text: "Modbus TCP", correct: false } ], explanation: "PTP (IEEE 1588) специально разработан для достижения субмиллисекундной точности синхронизации в промышленных сетях." },
+            { question: "Какое основное преимущество виртуализации серверов в PAS?", answers: [ { text: "Увеличение скорости работы полевых приборов", correct: false }, { text: "Экономия физического пространства, упрощение резервирования и восстановления", correct: true }, { text: "Уменьшение количества необходимых лицензий на ПО", correct: false }, { text: "Прямое управление контроллерами без сети", correct: false } ], explanation: "Виртуализация позволяет запускать множество серверов (ESV, Historian) на одном физическом хосте, что экономит место и упрощает создание отказоустойчивых кластеров." },
+            { question: "Что описывает философия High-Performance HMI согласно стандарту ISA-101?", answers: [ { text: "Использование ярких цветов и сложной анимации для привлечения внимания", correct: false }, { text: "Минималистичный дизайн (серый фон), четкое выделение алармов, встроенные тренды", correct: true }, { text: "Отображение максимально возможного количества данных на одном экране", correct: false }, { text: "Обязательное использование 3D-графики", correct: false } ], explanation: "ISA-101 нацелена на повышение ситуационной осведомленности оператора за счет минимизации отвлекающих факторов и акцентирования внимания на отклонениях от нормы." },
+            // Модуль 4
+            { question: "Какой документ определяет границы и объем работ подрядчика по проектированию?", answers: [ { text: "MDR (Master Document Register)", correct: false }, { text: "SOW (Scope of Work)", correct: true }, { text: "FAT Procedure", correct: false }, { text: "Datasheet", correct: false } ], explanation: "SOW (Объем работ) является основополагающим документом, который детально описывает все задачи и обязанности подрядчика." },
+            { question: "Для чего используется документ MDR (Master Document Register)?", answers: [ { text: "Для описания логики работы системы SIS", correct: false }, { text: "Для отслеживания статуса, ревизий и плановых дат всех проектных документов", correct: true }, { text: "Для детального описания характеристик клапана", correct: false }, { text: "Для оценки человеко-часов на проекте", correct: false } ], explanation: "MDR — это 'живой' реестр всех документов проекта, который позволяет контролировать их жизненный цикл." },
+            { question: "Какую информацию НЕ содержит P&ID?", answers: [ { text: "Основное технологическое оборудование", correct: false }, { text: "Маршруты прокладки кабелей и их длины", correct: true }, { text: "Приборы КИПиА и их обозначения", correct: false }, { text: "Трубопроводы и их диаметры", correct: false } ], explanation: "P&ID показывает ЧТО и ГДЕ установлено, но не КАК это физически соединено. Маршруты кабелей отображаются на Cable Routing Layouts." },
+            { question: "Какой документ является сводным перечнем всех приборов и измерительных петель (loops) на проекте?", answers: [ { text: "I/O List", correct: false }, { text: "Datasheet", correct: false }, { text: "Instrument Index", correct: true }, { text: "C&E Matrix", correct: false } ], explanation: "Instrument Index — это главный реестр всех тэгов КИПиА, служащий основой для многих других документов." },
+            { question: "На каком этапе проводятся испытания FAT (Factory Acceptance Test)?", answers: [ { text: "После монтажа оборудования на объекте", correct: false }, { text: "На заводе-изготовителе перед отгрузкой оборудования на объект", correct: true }, { text: "Во время концептуального проектирования", correct: false }, { text: "После одного года эксплуатации", correct: false } ], explanation: "FAT (Заводские приемочные испытания) проводятся для проверки оборудования в контролируемых заводских условиях перед его отправкой." },
+            { question: "Какой документ используется для детального описания подключения одного измерительного контура от датчика до I/O карты контроллера?", answers: [ { text: "Termination Diagram", correct: false }, { text: "P&ID", correct: false }, { text: "Loop Diagram", correct: true }, { text: "Instrument Index", correct: false } ], explanation: "Loop Diagram (схема контура) подробно показывает весь путь сигнала для одной 'петли', включая кабели, клеммные коробки и адреса каналов." },
+            { question: "Что является основной целью документа MTO (Material Take-Off)?", answers: [ { text: "Описать логику работы системы", correct: false }, { text: "Сформировать сводный перечень всех необходимых материалов и их количеств для закупки", correct: true }, { text: "Протестировать программное обеспечение", correct: false }, { text: "Определить уставки сигнализаций", correct: false } ], explanation: "MTO (Ведомость материалов) создается на основе проектной документации для формирования заявок на закупку оборудования и материалов." },
+            { question: "В каком документе описывается логическая связь 'Если (Причина), то (Следствие)' для систем SIS и FGS?", answers: [ { text: "Control Narrative", correct: false }, { text: "Cause & Effect (C&E) Matrix", correct: true }, { text: "Trip & Alarm Schedule", correct: false }, { text: "P&ID", correct: false } ], explanation: "Матрица причин и следствий (C&E Matrix) является формализованным представлением логики работы систем безопасности." },
+            { question: "Что такое 'As-Built' документация?", answers: [ { text: "Предварительный набор чертежей для оценки стоимости", correct: false }, { text: "Комплект документов, отражающий фактическое состояние построенного объекта со всеми изменениями", correct: true }, { text: "Процедура проведения заводских испытаний", correct: false }, { text: "Список поставщиков оборудования", correct: false } ], explanation: "As-Built (исполнительная) документация создается по завершении строительства и отражает все изменения, внесенные в ходе работ." },
+            { question: "Для чего нужен Datasheet прибора?", answers: [ { text: "Для отслеживания статуса документа", correct: false }, { text: "Для детального описания технических характеристик прибора и его заказа", correct: true }, { text: "Для отображения подключения целого контура", correct: false }, { text: "Для описания логики работы всей установки", correct: false } ], explanation: "Datasheet (технический паспорт/опросный лист) содержит все необходимые параметры для выбора и заказа конкретного прибора." },
+            // Mix
+            { question: "Какой тип сигнала обычно используется для аналоговых датчиков в промышленности?", answers: [ { text: "0-10 Вольт", correct: false }, { text: "Токовая петля 4-20 мА", correct: true }, { text: "RS-232", correct: false }, { text: "Дискретный сигнал 220В", correct: false } ], explanation: "Токовая петля 4-20 мА является промышленным стандартом благодаря своей высокой помехоустойчивости и возможности диагностики обрыва линии (4 мА > 0)." },
+            { question: "На каком этапе жизненного цикла проекта проводится SAT (Site Acceptance Test)?", answers: [ { text: "На заводе производителя", correct: false }, { text: "После монтажа оборудования на объекте, перед пусконаладкой", correct: true }, { text: "На этапе рабочего проектирования", correct: false }, { text: "Во время концептуальной оценки", correct: false } ], explanation: "SAT (Объектовые приемочные испытания) проводятся для проверки корректной установки и интеграции систем непосредственно на площадке." },
+            { question: "Какая система имеет наивысший приоритет и должна быть максимально независимой?", answers: [ { text: "PCS", correct: false }, { text: "SIS", correct: true }, { text: "Система коммерческого учета", correct: false }, { text: "Система видеонаблюдения", correct: false } ], explanation: "SIS (система противоаварийной защиты) отвечает за безопасность, поэтому ее проектируют максимально независимой от других систем, особенно от PCS." },
+            { question: "В чем разница между PFD (Process Flow Diagram) и P&ID?", answers: [ { text: "Разницы нет, это одно и то же", correct: false }, { text: "PFD показывает основную технологию, а P&ID добавляет детализацию по КИПиА и трубопроводной обвязке", correct: true }, { text: "P&ID используется для электрических схем, а PFD для механических", correct: false }, { text: "PFD показывает только оборудование, а P&ID только трубопроводы", correct: false } ], explanation: "PFD — это упрощенная схема процесса. P&ID — это детализированная схема, включающая все приборы, клапаны, номера линий и т.д." },
+            { question: "Какая информация НЕ указывается в Cable Schedule?", answers: [ { text: "Марка и сечение кабеля", correct: false }, { text: "Точки подключения 'Откуда' и 'Куда'", correct: false }, { text: "Логика работы контроллера", correct: true }, { text: "Примерная длина кабеля", correct: false } ], explanation: "Кабельный журнал (Cable Schedule) описывает физические характеристики кабеля и его маршрут, но не логику работы систем управления." },
+            { question: "Какой протокол позволяет передавать цифровую информацию (диагностика, настройка) поверх аналогового сигнала 4-20 мА?", answers: [ { text: "Modbus RTU", correct: false }, { text: "Profibus DP", correct: false }, { text: "HART", correct: true }, { text: "Foundation Fieldbus", correct: false } ], explanation: "Протокол HART (Highway Addressable Remote Transducer) накладывает цифровой частотный сигнал на стандартную токовую петлю 4-20 мА." },
+            { question: "Что такое 'Punch List' в контексте FAT или SAT?", answers: [ { text: "Список всех участников испытаний", correct: false }, { text: "Перечень замечаний и несоответствий, выявленных в ходе испытаний, которые необходимо устранить", correct: true }, { text: "График проведения тестов", correct: false }, { text: "Список оборудования, которое прошло тесты", correct: false } ], explanation: "Punch List — это официальный список замечаний, который формируется в ходе инспекций и испытаний." },
+            { question: "В каком документе прописываются уставки (setpoints) для аварийных сигнализаций и блокировок?", answers: [ { text: "Instrument Index", correct: false }, { text: "Layout Drawing", correct: false }, { text: "Trip & Alarm Schedule", correct: true }, { text: "Datasheet", correct: false } ], explanation: "Trip & Alarm Schedule (Ведомость сигнализаций и блокировок) является основным документом, где формализованы все уставки." },
+            { question: "Какая газовая группа является самой опасной (требует оборудования с наименьшим зазором во взрывонепроницаемой оболочке)?", answers: [ { text: "Группа IIA (Пропан)", correct: false }, { text: "Группа IIB (Этилен)", correct: false }, { text: "Группа IIC (Водород, Ацетилен)", correct: true }, { text: "Группа I (Рудничный метан)", correct: false } ], explanation: "Оборудование для группы IIC имеет самые строгие требования к конструкции, так как газы этой группы (водород, ацетилен) наиболее легко воспламеняются." },
+            { question: "Что означает 'Proof Test' для компонентов SIS?", answers: [ { text: "Первоначальная калибровка прибора на заводе", correct: false }, { text: "Периодическая проверка, доказывающая, что функция безопасности (SIF) работает корректно", correct: true }, { text: "Ежедневный отчет о состоянии системы", correct: false }, { text: "Тест на максимальную нагрузку перед установкой", correct: false } ], explanation: "Proof Test — это периодическое функциональное испытание для выявления скрытых отказов в системе безопасности, подтверждающее ее надежность (SIL)." },
+            { question: "Какая основная задача документа 'Control Narrative'?", answers: [ { text: "Составить список всех кабелей проекта", correct: false }, { text: "Подробно описать алгоритмы управления и логику работы системы для программирования и понимания операторами", correct: true }, { text: "Показать физическое расположение оборудования", correct: false }, { text: "Оценить стоимость проекта", correct: false } ], explanation: "Control Narrative (Описание алгоритмов управления) служит текстовым заданием для программистов и руководством для операторов." },
+            { question: "Какой тип датчика расхода не имеет движущихся частей и подходит для измерения расхода чистых, агрессивных и проводящих жидкостей?", answers: [ { text: "Турбинный", correct: false }, { text: "Кориолисовый", correct: false }, { text: "Электромагнитный", correct: true }, { text: "Вихревой", correct: false } ], explanation: "Электромагнитный расходомер работает на законе Фарадея, не имеет сужающих или движущихся частей и идеально подходит для проводящих жидкостей." },
+            { question: "На каком этапе жизненного цикла проекта инженер КИПиА наиболее активно участвует в пусконаладочных работах?", answers: [ { text: "FEED", correct: false }, { text: "Assess Stage", correct: false }, { text: "Commissioning and Start-Up", correct: true }, { text: "Detailed Design", correct: false } ], explanation: "Этап Commissioning and Start-Up (Пуско-наладочные работы и ввод в эксплуатацию) — это время, когда инженер КИПиА проверяет, калибрует и запускает все системы на объекте." },
+            { question: "Какова основная задача инженера по специальности 'Maintenance Instrument Engineer'?", answers: [ { text: "Проектирование новых систем", correct: false }, { text: "Техническое обслуживание, ремонт и диагностика отказов существующих систем КИПиА", correct: true }, { text: "Закупка оборудования", correct: false }, { text: "Управление проектом", correct: false } ], explanation: "Инженер по обслуживанию (Maintenance) фокусируется на поддержании работоспособности и надежности уже действующих систем." }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+
+        const questionTitleEl = document.getElementById('questionTitle');
+        const answersContainerEl = document.getElementById('answersContainer');
+        const feedbackAreaEl = document.getElementById('feedbackArea');
+        const nextButtonEl = document.getElementById('nextButton');
+        const resultsAreaEl = document.getElementById('resultsArea');
+        const scoreEl = document.getElementById('score');
+        const summaryTextEl = document.getElementById('summaryText');
+        const restartButtonEl = document.getElementById('restartButton');
+        const questionAreaEl = document.getElementById('questionArea');
+        const quizHeaderEl = document.getElementById('quizHeader');
+        const progressBarEl = document.getElementById('progressBar');
+        const questionCounterEl = document.getElementById('questionCounter');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function loadQuestion() {
+            feedbackAreaEl.classList.add('hidden');
+            answersContainerEl.innerHTML = '';
+            selectedAnswer = null;
+            
+            if (currentQuestionIndex < quizData.length) {
+                const currentQuestion = quizData[currentQuestionIndex];
+                questionTitleEl.textContent = currentQuestion.question;
+                questionCounterEl.textContent = `Вопрос ${currentQuestionIndex + 1} из ${quizData.length}`;
+                updateProgressBar();
+
+                currentQuestion.answers.forEach((answer, index) => {
+                    const answerId = `answer-${index}`;
+                    const answerLabel = document.createElement('label');
+                    answerLabel.setAttribute('for', answerId);
+                    
+                    const answerInput = document.createElement('input');
+                    answerInput.type = 'radio';
+                    answerInput.name = 'answer';
+                    answerInput.id = answerId;
+                    answerInput.value = index;
+                    
+                    answerLabel.appendChild(answerInput);
+                    answerLabel.append(answer.text);
+
+                    answerLabel.addEventListener('click', () => {
+                        document.querySelectorAll('.answers-container label').forEach(l => l.classList.remove('selected'));
+                        answerLabel.classList.add('selected');
+                        selectedAnswer = index;
+                    });
+                    
+                    answersContainerEl.appendChild(answerLabel);
+                });
+
+                nextButtonEl.textContent = "Ответить";
+                nextButtonEl.disabled = false;
+                questionAreaEl.classList.remove('hidden');
+                quizHeaderEl.classList.remove('hidden');
+                nextButtonEl.classList.remove('hidden');
+
+            } else {
+                showResults();
+            }
+        }
+        
+        function updateProgressBar() {
+            const progressPercentage = ((currentQuestionIndex) / quizData.length) * 100;
+            progressBarEl.style.width = progressPercentage + '%';
+        }
+
+        function handleNextButton() {
+            if (nextButtonEl.textContent === "Ответить") {
+                if (selectedAnswer === null) {
+                    alert("Пожалуйста, выберите ответ.");
+                    return;
+                }
+                checkAnswer(selectedAnswer);
+                nextButtonEl.textContent = (currentQuestionIndex === quizData.length - 1) ? "Показать результаты" : "Следующий вопрос";
+            } else {
+                currentQuestionIndex++;
+                loadQuestion();
+            }
+        }
+
+        function checkAnswer(selectedIndex) {
+            const currentQuestion = quizData[currentQuestionIndex];
+            const isCorrect = currentQuestion.answers[selectedIndex].correct;
+
+            document.querySelectorAll('.answers-container label').forEach(label => {
+                label.style.pointerEvents = 'none';
+            });
+
+            if (isCorrect) {
+                score++;
+                feedbackAreaEl.textContent = "Правильно! " + (currentQuestion.explanation || "");
+                feedbackAreaEl.className = 'feedback correct';
+            } else {
+                feedbackAreaEl.textContent = "Неправильно. " + (currentQuestion.explanation || "");
+                feedbackAreaEl.className = 'feedback incorrect';
+            }
+            feedbackAreaEl.classList.remove('hidden');
+        }
+
+        function showResults() {
+            questionAreaEl.classList.add('hidden');
+            nextButtonEl.classList.add('hidden');
+            resultsAreaEl.classList.remove('hidden');
+            quizHeaderEl.classList.add('hidden');
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.textContent = `Ваш результат: ${score} из ${quizData.length} (${percentage}%)`;
+            
+            let summary = "";
+            if (percentage >= 90) {
+                summary = "Отличный результат! Вы продемонстрировали глубокое понимание материала.";
+            } else if (percentage >= 75) {
+                summary = "Очень хороший результат! Вы хорошо усвоили большинство тем.";
+            } else if (percentage >= 50) {
+                summary = "Хороший результат, но есть несколько тем, которые стоит повторить для закрепления знаний.";
+            } else {
+                summary = "Стоит еще раз внимательно изучить материалы курса, чтобы улучшить результат.";
+            }
+            summaryTextEl.textContent = summary;
+        }
+        
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedAnswer = null;
+            shuffleArray(quizData);
+            resultsAreaEl.classList.add('hidden');
+            loadQuestion();
+        }
+
+        nextButtonEl.addEventListener('click', handleNextButton);
+        restartButtonEl.addEventListener('click', restartQuiz);
+
+        // Initial load
+        shuffleArray(quizData); // Перемешиваем вопросы для разнообразия
+        loadQuestion();
+    </script>
+</body>
+</html>
